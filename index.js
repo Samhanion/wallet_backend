@@ -48,9 +48,9 @@ app.get("/sendTransaction", async (req, res) => {
   };
   const transaction = await signer.sendTransaction(tx);
   console.log(transaction);
-  const receipt = await transaction.wait();
-  console.log(receipt);
-  res.send(receipt);
+  // const receipt = await transaction.wait();
+  // console.log(receipt);
+  res.send(transaction);
 });
 
 app.listen(port, () => {
