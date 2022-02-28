@@ -24,8 +24,8 @@ app.get("/createWallet", (req, res) => {
   res.send(response);
 });
 
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // http://localhost:3000/sendTransaction/?mnemonic=toilet skate together scheme shaft answer elder fence wasp reflect dawn paper&network=eth/ropsten&recipient=0x44DD1abdA1bC003e073c5CA21BdCAB4EA91D9531&amount=0.0001
 // send transaction
