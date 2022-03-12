@@ -31,7 +31,6 @@ app.use(express.urlencoded({ extended: true }));
 // send transaction
 app.get("/sendTransaction", async (req, res) => {
   // https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/eth/ropsten
-  //
   const connection = new ethers.providers.JsonRpcProvider(`https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/${req.query.network}`);
   const gasPrice = connection.getGasPrice();
   const wallet = ethers.Wallet.fromMnemonic(req.query.mnemonic);
