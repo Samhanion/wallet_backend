@@ -55,7 +55,7 @@ app.get("/auth", passport.authenticate("twitter"));
 // });
 app.get("/auth/callback", passport.authenticate("twitter"), (req, res) => {
   console.log(req.user);
-  res.send("callback");
+  res.send(req.user);
 });
 
 // login route
