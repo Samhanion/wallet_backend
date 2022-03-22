@@ -11,8 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.26.1",
     "ethers": "^5.5.4",
-    "express": "^4.17.3"
+    "express": "^4.17.3",
+    "express-session": "^1.17.2",
+    "passport": "^0.5.2",
+    "passport-twitter": "^1.0.4"
   },
   "engines": {
     "node": "16.14.0"

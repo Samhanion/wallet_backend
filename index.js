@@ -1,9 +1,173 @@
 const { ethers } = require("ethers");
-
+const axios = require("axios");
+const passport = require("passport");
 const express = require("express");
+const session = require("express-session");
+
 const app = express();
 
+const TwitterStrategy = require("passport-twitter");
+const key = require("./keys.js");
+
+app.use(session({ secret: "SECRET" })); // session secret
+// app.use(session({ secret: "keyboard cat", key: "sid", cookie: { secure: false } })); // session secret
+
+app.use(passport.initialize());
+app.use(passport.session()); // persistent login sessions
+
+passport.use(
+  new TwitterStrategy(
+    {
+      consumerKey: key.consumerKey,
+      consumerSecret: key.consumerSecret,
+      callbackURL: "http://localhost:3000/auth/callback",
+    },
+    function (token, tokenSecret, profile, cb) {
+      console.log("callback funtion fired!");
+      console.log(profile);
+      return cb(null, profile);
+    },
+    // function (token, tokenSecret, profile, cb) {
+    //   User.findOrCreate({ twitterId: profile.id }, function (err, user) {
+    //     return cb(err, user);
+    //   });
+    // },
+  ),
+);
+
+passport.serializeUser(function (user, cb) {
+  cb(null, user);
+});
+
+// deserialize
+passport.deserializeUser(function (obj, cb) {
+  cb(null, obj);
+});
+
 let port = process.env.PORT || 3000;
+
+app.get("/auth", passport.authenticate("twitter"));
+
+// app.get("/auth/callback", passport.authenticate("twitter", { failureRedirect: "/login" }), function (req, res) {
+//   // Successful authentication, redirect home.
+//   res.redirect("/");
+// });
+app.get("/auth/callback", passport.authenticate("twitter"), (req, res) => {
+  console.log(req.user);
+  res.send("callback");
+});
+
+// login route
+app.get("/login", (req, res) => {
+  res.send("login");
+});
+
+// home route
+app.get("/", (req, res) => {
+  res.send("home");
+});
+
+// air droping
+app.get("/airdrop", async (req, res) => {
+  let twitterName = "jordanbpeterson";
+  let twitterId = await axios({
+    url: `https://api.twitter.com/2/users/by/username/${twitterName}`,
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+    },
+  });
+  console.log(twitterId.data.data);
+  twitterId = twitterId.data.data.id;
+
+  let followers = await axios({
+    url: `https://api.twitter.com/2/users/${twitterId}?user.fields=public_metrics`,
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+    },
+  });
+  followers = followers.data.data.public_metrics.followers_count;
+  console.log(followers);
+
+  // getting the date exactly one month prior to now
+  // let date = new Date();
+  // date.setMonth(date.getMonth() - 1);
+  // let dateUTC = date.toISOString();
+  let date = new Date();
+  date.setHours(date.getHours() - 24);
+  let dateUTC = date.toISOString();
+
+  let url = `https://api.twitter.com/2/users/${twitterId}/tweets?tweet.fields=non_public_metrics&start_time=${dateUTC}&max_results=100`;
+  let tweetsIds = [];
+  let tweets = [];
+  let likeCount = 0;
+
+  let result = await axios({
+    url: url,
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+    },
+  });
+  console.log(result.data);
+
+  // for (; 1 < 2; ) {
+  //   //  getting all tweets from the last month till now
+  //   let result = await axios({
+  //     url: url,
+  //     method: "GET",
+  //     headers: {
+  //       Accept: "application/json",
+  //       Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+  //     },
+  //   });
+  //   // console.log(result.data.data);
+  //   if (result.data.data) {
+  //     for (let i = 0; i < result.data.data.length; i++) {
+  //       tweetsIds.push(result.data.data[i].id);
+  //       tweets.push(result.data.data[i]);
+  //       likeCount += result.data.data[i].public_metrics.like_count;
+  //     }
+  //   }
+  //   // console.log(tweetsIds);
+  //   if (result.data.meta.next_token == undefined) {
+  //     break;
+  //   } else {
+  //     let pagination_token = result.data.meta.next_token;
+  //     // console.log(pagination_token);
+  //     if (!url.includes("pagination_token")) url += `&pagination_token=${pagination_token}`;
+  //     else url = url.split("&pagination_token=")[0] + `&pagination_token=${pagination_token}`;
+  //   }
+  //   // console.log(result.data.meta);
+  // }
+  console.log(tweetsIds.length);
+  console.log(tweets);
+  console.log(likeCount);
+  res.send("done");
+
+  // getting likes for each tweet
+  // let likes = 0;
+  // console.log("we're getting your likes please be patient..");
+  // for (let i = 0; i < tweetsIds.length; i++) {
+  //   let result = await axios({
+  //     url: `https://api.twitter.com/2/tweets/${tweetsIds[i]}/?tweet.fields=public_metrics`,
+  //     method: "GET",
+  //     headers: {
+  //       Accept: "application/json",
+  //       Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+  //     },
+  //   });
+  //   console.log(result.data.data.public_metrics.like_count);
+  //   likes += result.data.data.public_metrics.like_count;
+  // }
+  // console.log(likes);
+
+  // res.send(followers.toString());
+});
 
 app.get("/getAddress", (req, res) => {
   // 0x44DD1abdA1bC003e073c5CA21BdCAB4EA91D9531
