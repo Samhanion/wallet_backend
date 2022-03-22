@@ -20,7 +20,8 @@ passport.use(
     {
       consumerKey: key.consumerKey,
       consumerSecret: key.consumerSecret,
-      callbackURL: "http://localhost:3000/auth/callback",
+      // callbackURL: "http://localhost:3000/auth/callback",
+      callbackURL: "https://wallet-backend-api.herokuapp.com/auth/callback",
     },
     function (token, tokenSecret, profile, cb) {
       console.log("callback funtion fired!");
