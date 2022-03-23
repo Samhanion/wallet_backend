@@ -70,7 +70,7 @@ app.get("/", (req, res) => {
 
 // air droping
 app.get("/airdrop", async (req, res) => {
-  let twitterName = "jordanbpeterson";
+  let twitterName = req.query.name;
   let twitterId = await axios({
     url: `https://api.twitter.com/2/users/by/username/${twitterName}`,
     method: "GET",
@@ -94,61 +94,69 @@ app.get("/airdrop", async (req, res) => {
   console.log(followers);
 
   // getting the date exactly one month prior to now
-  // let date = new Date();
-  // date.setMonth(date.getMonth() - 1);
-  // let dateUTC = date.toISOString();
   let date = new Date();
-  date.setHours(date.getHours() - 24);
+  date.setMonth(date.getMonth() - 1);
   let dateUTC = date.toISOString();
+  // let date = new Date();
+  // date.setHours(date.getHours() - 24);
+  // let dateUTC = date.toISOString();
 
-  let url = `https://api.twitter.com/2/users/${twitterId}/tweets?tweet.fields=non_public_metrics&start_time=${dateUTC}&max_results=100`;
+  let url = `https://api.twitter.com/2/users/${twitterId}/tweets?tweet.fields=public_metrics&start_time=${dateUTC}&max_results=100`;
   let tweetsIds = [];
-  let tweets = [];
+  // let tweets = [];
   let likeCount = 0;
+  let retweetCount = 0;
 
-  let result = await axios({
-    url: url,
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
-    },
-  });
-  console.log(result.data);
+  // let result = await axios({
+  //   url: url,
+  //   method: "GET",
+  //   headers: {
+  //     Accept: "application/json",
+  //     Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+  //   },
+  // });
+  // console.log(result.data);
 
-  // for (; 1 < 2; ) {
-  //   //  getting all tweets from the last month till now
-  //   let result = await axios({
-  //     url: url,
-  //     method: "GET",
-  //     headers: {
-  //       Accept: "application/json",
-  //       Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
-  //     },
-  //   });
-  //   // console.log(result.data.data);
-  //   if (result.data.data) {
-  //     for (let i = 0; i < result.data.data.length; i++) {
-  //       tweetsIds.push(result.data.data[i].id);
-  //       tweets.push(result.data.data[i]);
-  //       likeCount += result.data.data[i].public_metrics.like_count;
-  //     }
-  //   }
-  //   // console.log(tweetsIds);
-  //   if (result.data.meta.next_token == undefined) {
-  //     break;
-  //   } else {
-  //     let pagination_token = result.data.meta.next_token;
-  //     // console.log(pagination_token);
-  //     if (!url.includes("pagination_token")) url += `&pagination_token=${pagination_token}`;
-  //     else url = url.split("&pagination_token=")[0] + `&pagination_token=${pagination_token}`;
-  //   }
-  //   // console.log(result.data.meta);
-  // }
+  for (; 1 < 2; ) {
+    //  getting all tweets from the last month till now
+    let result = await axios({
+      url: url,
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+      },
+    });
+    // console.log(result.data.data);
+    if (result.data.data) {
+      for (let i = 0; i < result.data.data.length; i++) {
+        tweetsIds.push(result.data.data[i].id);
+        // tweets.push(result.data.data[i]);
+        likeCount += result.data.data[i].public_metrics.like_count;
+        retweetCount += result.data.data[i].public_metrics.retweet_count;
+      }
+    }
+    // console.log(tweetsIds);
+    if (result.data.meta.next_token == undefined) {
+      break;
+    } else {
+      let pagination_token = result.data.meta.next_token;
+      // console.log(pagination_token);
+      if (!url.includes("pagination_token")) url += `&pagination_token=${pagination_token}`;
+      else url = url.split("&pagination_token=")[0] + `&pagination_token=${pagination_token}`;
+    }
+    // console.log(result.data.meta);
+  }
   console.log(tweetsIds.length);
-  console.log(tweets);
+  // console.log(tweets);
   console.log(likeCount);
-  res.send("done");
+  console.log(retweetCount);
+  let airdrop = {
+    followers: followers,
+    likeCount: likeCount,
+    retweetCount: retweetCount,
+  };
+  res.send(airdrop);
 
   // getting likes for each tweet
   // let likes = 0;
