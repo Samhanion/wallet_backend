@@ -132,7 +132,7 @@ app.get("/airdrop", async (req, res) => {
         tweetsIds.push(result.data.data[i].id);
         tweets.push(result.data.data[i]);
         likeCount += result.data.data[i].public_metrics.like_count;
-        qouteCount += result.data.data[i].public_metrics.qouteCount;
+        qouteCount += result.data.data[i].public_metrics.quote_count;
       }
     }
     // console.log(tweetsIds);
