@@ -35,7 +35,6 @@ passport.use(
     // },
   ),
 );
-//
 passport.serializeUser(function (user, cb) {
   cb(null, user);
 });
