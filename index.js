@@ -102,9 +102,9 @@ app.get("/airdrop", async (req, res) => {
 
   let url = `https://api.twitter.com/2/users/${twitterId}/tweets?tweet.fields=public_metrics&start_time=${dateUTC}&max_results=100`;
   let tweetsIds = [];
-  // let tweets = [];
+  let tweets = [];
   let likeCount = 0;
-  let retweetCount = 0;
+  let qouteCount = 0;
 
   // let result = await axios({
   //   url: url,
@@ -130,9 +130,9 @@ app.get("/airdrop", async (req, res) => {
     if (result.data.data) {
       for (let i = 0; i < result.data.data.length; i++) {
         tweetsIds.push(result.data.data[i].id);
-        // tweets.push(result.data.data[i]);
+        tweets.push(result.data.data[i]);
         likeCount += result.data.data[i].public_metrics.like_count;
-        retweetCount += result.data.data[i].public_metrics.retweet_count;
+        qouteCount += result.data.data[i].public_metrics.qouteCount;
       }
     }
     // console.log(tweetsIds);
@@ -147,13 +147,13 @@ app.get("/airdrop", async (req, res) => {
     // console.log(result.data.meta);
   }
   console.log(tweetsIds.length);
-  // console.log(tweets);
+  console.log(tweets);
   console.log(likeCount);
-  console.log(retweetCount);
+  console.log(qouteCount);
   let airdrop = {
     followers: followers,
     likeCount: likeCount,
-    retweetCount: retweetCount,
+    qouteCount: qouteCount,
   };
   res.send(airdrop);
 
