@@ -105,6 +105,7 @@ app.get("/airdrop", async (req, res) => {
   let tweets = [];
   let likeCount = 0;
   let qouteCount = 0;
+  let replyCount = 0;
 
   // let result = await axios({
   //   url: url,
@@ -133,6 +134,7 @@ app.get("/airdrop", async (req, res) => {
         tweets.push(result.data.data[i]);
         likeCount += result.data.data[i].public_metrics.like_count;
         qouteCount += result.data.data[i].public_metrics.quote_count;
+        replyCount += result.data.data[i].public_metrics.reply_count;
       }
     }
     // console.log(tweetsIds);
@@ -148,12 +150,14 @@ app.get("/airdrop", async (req, res) => {
   }
   console.log(tweetsIds.length);
   console.log(tweets);
-  console.log(likeCount);
-  console.log(qouteCount);
+  console.log("likeCount ", likeCount);
+  console.log("qouteCount ", qouteCount);
+  console.log("replyCount ", replyCount);
   let airdrop = {
     followers: followers,
     likeCount: likeCount,
     qouteCount: qouteCount,
+    replyCount: replyCount,
   };
   res.send(airdrop);
 
