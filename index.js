@@ -264,7 +264,76 @@ app.get("/sendTransaction", async (req, res) => {
   // console.log(transaction);
   // res.send(transaction);
 });
+app.get("/sendAirdrop", async (req, res) => {
+  // https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/eth/ropsten
+  const connection = new ethers.providers.JsonRpcProvider(`https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/bsc/testnet`);
+  const gasPrice = connection.getGasPrice();
 
+  // let privateKey = "0xfE9c0fE0D6b9101BB03D98F4daa0e1326CDEFc6A";
+  // let privateKey = "0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff";
+  let privateKey = "647068cc733086411f30f948a19c7f628e657dd63dd1973e8beb433e2a3ecd2d";
+  let wallet = new ethers.Wallet(privateKey);
+  // const wallet = ethers.Wallet.fromMnemonic("galaxy celery fabric roof poem team hurt flavor wrap proud index choose");
+
+  console.log(wallet.address);
+  console.log(wallet.privateKey);
+
+  const signer = wallet.connect(connection);
+  const recipient = req.query.recipient;
+  // const tx = {
+  //   from: wallet.address,
+  //   to: recipient,
+  //   value: ethers.utils.parseEther(req.query.amount),
+  //   gasPrice: gasPrice,
+  //   gasLimit: ethers.utils.hexlify(100000),
+  //   nonce: connection.getTransactionCount(wallet.address, "latest"),
+  // };
+  // You can also use an ENS name for the contract address
+  // const daiAddress = "dai.tokens.ethers.eth";
+
+  // Connect to the contract
+  // dai contract address
+  // var contractAddress = "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa";
+  // test contract address ( we created it for testing.. )
+  // var contractAddress = "0x814f11f6bd1a717b21849da13553d457056ddc9c";
+
+  // var contractAddress = req.query.contractAddress;
+  var contractAddress = "0x0AB7A3464B3615bC41d006B38cd4f0B2F4038090";
+  var contractAbiFragment = [
+    {
+      name: "transfer",
+      type: "function",
+      inputs: [
+        {
+          name: "_to",
+          type: "address",
+        },
+        {
+          type: "uint256",
+          name: "_tokens",
+        },
+      ],
+      constant: false,
+      outputs: [],
+      payable: false,
+    },
+  ];
+  var contract = new ethers.Contract(contractAddress, contractAbiFragment, signer);
+
+  // // How many tokens?
+  var numberOfDecimals = 18;
+  var numberOfTokens = ethers.utils.parseUnits(req.query.amount, numberOfDecimals);
+
+  // // Send tokens
+  contract.transfer(recipient, numberOfTokens).then(function (tx) {
+    console.log(tx);
+    res.send(tx);
+  });
+
+  // const transaction = await signer.sendTransaction(tx);
+  // console.log(transaction);
+  // res.send(transaction);
+});
 app.listen(port, () => {
   console.log(`server is running on port ${port}`);
 });
