@@ -3,6 +3,7 @@ const axios = require("axios");
 const passport = require("passport");
 const express = require("express");
 const session = require("express-session");
+const { TwitterApi } = require("twitter-api-v2");
 
 const app = express();
 
@@ -45,6 +46,23 @@ passport.deserializeUser(function (obj, cb) {
 });
 
 let port = process.env.PORT || 3000;
+
+// http://localhost:3000/twitter/?accessToken=1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N&accessSecret=c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX&tweet=Test%20Tweet
+app.get("/twitter", async (req, res) => {
+  const client = new TwitterApi({
+    appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
+    appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
+    // accessToken: "1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N",
+    // accessSecret: "c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX",
+    accessToken: req.query.accessToken,
+    accessSecret: req.query.accessSecret,
+  });
+  const client_rw = client.readWrite;
+
+  await client_rw.v1.tweet(req.query.tweet);
+
+  res.send("done!");
+});
 
 app.get("/auth", passport.authenticate("twitter"));
 
