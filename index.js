@@ -70,29 +70,29 @@ app.get("/twitter", async (req, res) => {
   tweetImg.composite(profileImg, 290, 620);
 
   tweetImg.resize(400, 400);
+  tweetImg.write("claim.jpg");
 
-  setTimeout(() => {
-    tweetImg.write("claim.jpg");
+  setTimeout(async () => {
+    const mediaIds = await Promise.all([
+      // file path
+      client.v1.uploadMedia("./claim.jpg"),
+      // from a buffer, for example obtained with an image modifier package
+      // client.v1.uploadMedia(Buffer.from(rotatedImage), { type: "png" }),
+    ]);
+    console.log(mediaIds);
+    // let tweet = await client_rw.v1.tweet(req.query.tweet);
+    // let tweet = await client_rw.v1.tweet("Test Tweet 20");
+    let tweet = await client_rw.v1.tweet(req.query.tweet, { media_ids: mediaIds });
+
+    let user = await client_rw.v2.me();
+    console.log("user", user);
+    console.log("tweet", tweet);
+
+    console.log(tweet.id_str);
+    // let tweetId = tweet.id.toString();
+
+    res.send(tweet.id_str);
   }, 1000);
-  const mediaIds = await Promise.all([
-    // file path
-    client.v1.uploadMedia("./claim.jpg"),
-    // from a buffer, for example obtained with an image modifier package
-    // client.v1.uploadMedia(Buffer.from(rotatedImage), { type: "png" }),
-  ]);
-  console.log(mediaIds);
-  // let tweet = await client_rw.v1.tweet(req.query.tweet);
-  // let tweet = await client_rw.v1.tweet("Test Tweet 20");
-  let tweet = await client_rw.v1.tweet(req.query.tweet, { media_ids: mediaIds });
-
-  let user = await client_rw.v2.me();
-  console.log("user", user);
-  console.log("tweet", tweet);
-
-  console.log(tweet.id_str);
-  // let tweetId = tweet.id.toString();
-
-  res.send(tweet.id_str);
 });
 app.get("/metrics", async (req, res) => {
   const client = new TwitterApi({
