@@ -14,8 +14,7 @@
     "axios": "^0.26.1",
     "ethers": "^5.5.4",
     "express": "^4.17.3",
-    "express-session": "^1.17.2",
-    "passport": "^0.5.2",
+    "jimp": "^0.16.1",
     "passport-twitter": "^1.0.4",
     "twitter-api-v2": "^1.11.2"
   },

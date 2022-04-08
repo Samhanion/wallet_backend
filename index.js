@@ -1,54 +1,100 @@
 const { ethers } = require("ethers");
 const axios = require("axios");
-const passport = require("passport");
+// const passport = require("passport");
 const express = require("express");
-const session = require("express-session");
+// const session = require("express-session");
 const { TwitterApi } = require("twitter-api-v2");
-
+const jimp = require("jimp");
 const app = express();
 
-const TwitterStrategy = require("passport-twitter");
-const key = require("./keys.js");
+// const TwitterStrategy = require("passport-twitter");
+// const key = require("./keys.js");
 
-app.use(session({ secret: "SECRET" })); // session secret
+// app.use(session({ secret: "SECRET" })); // session secret
 // app.use(session({ secret: "keyboard cat", key: "sid", cookie: { secure: false } })); // session secret
 
-app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
+// app.use(passport.initialize());
+// app.use(passport.session()); // persistent login sessions
 
-passport.use(
-  new TwitterStrategy(
-    {
-      consumerKey: key.consumerKey,
-      consumerSecret: key.consumerSecret,
-      // callbackURL: "http://localhost:3000/auth/callback",
-      callbackURL: "https://wallet-backend-api.herokuapp.com/auth/callback",
-    },
-    function (token, tokenSecret, profile, cb) {
-      console.log("callback funtion fired!");
-      console.log(profile);
-      return cb(null, profile);
-    },
-    // function (token, tokenSecret, profile, cb) {
-    //   User.findOrCreate({ twitterId: profile.id }, function (err, user) {
-    //     return cb(err, user);
-    //   });
-    // },
-  ),
-);
-passport.serializeUser(function (user, cb) {
-  cb(null, user);
-});
+// passport.use(
+//   new TwitterStrategy(
+//     {
+//       consumerKey: key.consumerKey,
+//       consumerSecret: key.consumerSecret,
+//       // callbackURL: "http://localhost:3000/auth/callback",
+//       callbackURL: "https://wallet-backend-api.herokuapp.com/auth/callback",
+//     },
+//     function (token, tokenSecret, profile, cb) {
+//       console.log("callback funtion fired!");
+//       console.log(profile);
+//       return cb(null, profile);
+//     },
+//     // function (token, tokenSecret, profile, cb) {
+//     //   User.findOrCreate({ twitterId: profile.id }, function (err, user) {
+//     //     return cb(err, user);
+//     //   });
+//     // },
+//   ),
+// );
+// passport.serializeUser(function (user, cb) {
+//   cb(null, user);
+// });
 
 // deserialize
-passport.deserializeUser(function (obj, cb) {
-  cb(null, obj);
-});
+// passport.deserializeUser(function (obj, cb) {
+//   cb(null, obj);
+// });
 
 let port = process.env.PORT || 3000;
 
 // http://localhost:3000/twitter/?accessToken=1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N&accessSecret=c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX&tweet=Test%20Tweet
 app.get("/twitter", async (req, res) => {
+  const client = new TwitterApi({
+    appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
+    appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
+    accessToken: "1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N",
+    accessSecret: "c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX",
+    // accessToken: req.query.accessToken,
+    // accessSecret: req.query.accessSecret,
+  });
+  const client_rw = client.readWrite;
+
+  const tweetImg = await jimp.read("./walter_claim_tweet.jpg");
+  const profileImg = await jimp.read(req.query.profileImg);
+  // const profileImg = await jimp.read(req.query.profileImg);
+
+  profileImg.resize(393, 360);
+
+  let font = await jimp.loadFont(jimp.FONT_SANS_64_WHITE);
+  tweetImg.print(font, 290, 535, `@${req.query.username}`);
+  tweetImg.composite(profileImg, 290, 620);
+
+  tweetImg.resize(400, 400);
+
+  setTimeout(() => {
+    tweetImg.write("claim.jpg");
+  }, 1000);
+  const mediaIds = await Promise.all([
+    // file path
+    client.v1.uploadMedia("./claim.jpg"),
+    // from a buffer, for example obtained with an image modifier package
+    // client.v1.uploadMedia(Buffer.from(rotatedImage), { type: "png" }),
+  ]);
+  console.log(mediaIds);
+  // let tweet = await client_rw.v1.tweet(req.query.tweet);
+  // let tweet = await client_rw.v1.tweet("Test Tweet 20");
+  let tweet = await client_rw.v1.tweet(req.query.tweet, { media_ids: mediaIds });
+
+  let user = await client_rw.v2.me();
+  console.log("user", user);
+  console.log("tweet", tweet);
+
+  console.log(tweet.id_str);
+  // let tweetId = tweet.id.toString();
+
+  res.send(tweet.id_str);
+});
+app.get("/metrics", async (req, res) => {
   const client = new TwitterApi({
     appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
     appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
@@ -59,31 +105,31 @@ app.get("/twitter", async (req, res) => {
   });
   const client_rw = client.readWrite;
 
-  await client_rw.v1.tweet(req.query.tweet);
-
-  res.send("done!");
+  const tweetData = await client_rw.v1.singleTweet(req.query.tweetId);
+  console.log("tweetData..", tweetData);
+  res.send(tweetData);
 });
 
-app.get("/auth", passport.authenticate("twitter"));
+// app.get("/auth", passport.authenticate("twitter"));
 
 // app.get("/auth/callback", passport.authenticate("twitter", { failureRedirect: "/login" }), function (req, res) {
 //   // Successful authentication, redirect home.
 //   res.redirect("/");
 // });
-app.get("/auth/callback", passport.authenticate("twitter"), (req, res) => {
-  console.log(req.user);
-  res.send(req.user);
-});
+// app.get("/auth/callback", passport.authenticate("twitter"), (req, res) => {
+//   console.log(req.user);
+//   res.send(req.user);
+// });
 
 // login route
-app.get("/login", (req, res) => {
-  res.send("login");
-});
+// app.get("/login", (req, res) => {
+//   res.send("login");
+// });
 
-// home route
-app.get("/", (req, res) => {
-  res.send("home");
-});
+// // home route
+// app.get("/", (req, res) => {
+//   res.send("home");
+// });
 //
 // air droping
 app.get("/airdrop", async (req, res) => {
@@ -291,31 +337,13 @@ app.get("/sendAirdrop", async (req, res) => {
   // let privateKey = "0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff";
   let privateKey = "647068cc733086411f30f948a19c7f628e657dd63dd1973e8beb433e2a3ecd2d";
   let wallet = new ethers.Wallet(privateKey);
-  // const wallet = ethers.Wallet.fromMnemonic("galaxy celery fabric roof poem team hurt flavor wrap proud index choose");
 
   console.log(wallet.address);
   console.log(wallet.privateKey);
 
   const signer = wallet.connect(connection);
   const recipient = req.query.recipient;
-  // const tx = {
-  //   from: wallet.address,
-  //   to: recipient,
-  //   value: ethers.utils.parseEther(req.query.amount),
-  //   gasPrice: gasPrice,
-  //   gasLimit: ethers.utils.hexlify(100000),
-  //   nonce: connection.getTransactionCount(wallet.address, "latest"),
-  // };
-  // You can also use an ENS name for the contract address
-  // const daiAddress = "dai.tokens.ethers.eth";
 
-  // Connect to the contract
-  // dai contract address
-  // var contractAddress = "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa";
-  // test contract address ( we created it for testing.. )
-  // var contractAddress = "0x814f11f6bd1a717b21849da13553d457056ddc9c";
-
-  // var contractAddress = req.query.contractAddress;
   var contractAddress = "0x0AB7A3464B3615bC41d006B38cd4f0B2F4038090";
   var contractAbiFragment = [
     {
@@ -347,10 +375,6 @@ app.get("/sendAirdrop", async (req, res) => {
     console.log(tx);
     res.send(tx);
   });
-
-  // const transaction = await signer.sendTransaction(tx);
-  // console.log(transaction);
-  // res.send(transaction);
 });
 app.listen(port, () => {
   console.log(`server is running on port ${port}`);
