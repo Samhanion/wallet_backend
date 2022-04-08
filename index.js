@@ -82,7 +82,8 @@ app.get("/twitter", async (req, res) => {
     console.log(mediaIds);
     // let tweet = await client_rw.v1.tweet(req.query.tweet);
     // let tweet = await client_rw.v1.tweet("Test Tweet 20");
-    let tweet = await client_rw.v1.tweet(req.query.tweet, { media_ids: mediaIds });
+    let tweetText = req.query.tweet.toString();
+    let tweet = await client_rw.v1.tweet(tweetText, { media_ids: mediaIds });
 
     let user = await client_rw.v2.me();
     console.log("user", user);
