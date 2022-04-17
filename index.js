@@ -61,15 +61,23 @@ app.get("/twitter", async (req, res) => {
 
   const tweetImg = await jimp.read("./walter_claim_tweet.jpg");
   const profileImg = await jimp.read(req.query.profileImg);
-  // const profileImg = await jimp.read(req.query.profileImg);
+  // const mask = await jimp.read("./rounded_borders.jpg");
 
-  profileImg.resize(393, 360);
+  // profileImg.mask(mask, 0, 0).write("masked.png", console.log);
 
-  let font = await jimp.loadFont(jimp.FONT_SANS_64_WHITE);
-  tweetImg.print(font, 290, 535, `@${req.query.username}`);
-  tweetImg.composite(profileImg, 290, 620);
+  profileImg.resize(900, 900);
+  // profileImg.circle({ x: 0, y: 0 });
+  profileImg.circle();
 
-  tweetImg.resize(400, 400);
+  let nameFont = await jimp.loadFont(jimp.FONT_SANS_128_BLACK);
+  tweetImg.print(nameFont, 1330, 1980, `@${req.query.username}`);
+  let potentialFont = await jimp.loadFont(jimp.FONT_SANS_128_WHITE);
+  tweetImg.print(potentialFont, 1430, 2260, `${req.query.potential}`);
+  let tokenFont = await jimp.loadFont(jimp.FONT_SANS_128_BLACK);
+  tweetImg.print(tokenFont, 1150, 2490, `+ Walter Tokens`);
+  tweetImg.composite(profileImg, 1170, 960);
+
+  // tweetImg.resize(400, 400);
   tweetImg.write("claim.jpg");
 
   setTimeout(async () => {
