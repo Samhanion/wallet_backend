@@ -340,12 +340,12 @@ app.get("/sendTransaction", async (req, res) => {
 });
 app.get("/sendAirdrop", async (req, res) => {
   // https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/eth/ropsten
-  const connection = new ethers.providers.JsonRpcProvider(`https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/bsc/testnet`);
+  const connection = new ethers.providers.JsonRpcProvider(`https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/polygon/mumbai`);
   const gasPrice = connection.getGasPrice();
 
   // let privateKey = "0xfE9c0fE0D6b9101BB03D98F4daa0e1326CDEFc6A";
   // let privateKey = "0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff";
-  let privateKey = "647068cc733086411f30f948a19c7f628e657dd63dd1973e8beb433e2a3ecd2d";
+  let privateKey = "7c5a0c2e789ee03af4cc342586af897b56780207bcff695152a2bf3e4422f90d";
   let wallet = new ethers.Wallet(privateKey);
 
   console.log(wallet.address);
@@ -354,7 +354,7 @@ app.get("/sendAirdrop", async (req, res) => {
   const signer = wallet.connect(connection);
   const recipient = req.query.recipient;
 
-  var contractAddress = "0x0AB7A3464B3615bC41d006B38cd4f0B2F4038090";
+  var contractAddress = "0x96f6bfE284061d3233B69683E593db260B375016";
   var contractAbiFragment = [
     {
       name: "transfer",
