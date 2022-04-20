@@ -110,8 +110,8 @@ app.get("/metrics", async (req, res) => {
     appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
     // accessToken: "1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N",
     // accessSecret: "c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX",
-    accessToken: req.query.accessToken,
-    accessSecret: req.query.accessSecret,
+    accessToken: req.body.accessToken,
+    accessSecret: req.body.accessSecret,
   });
   const client_rw = client.readWrite;
 
