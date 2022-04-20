@@ -118,9 +118,12 @@ app.post("/metrics", async (req, res) => {
   console.log("body.....", req.body);
   const client_rw = client.readWrite;
 
-  const tweetData = await client_rw.v1.singleTweet(req.body.tweetId);
-  // console.log("tweetData..", tweetData);
-  res.send(tweetData);
+  try {
+    const tweetData = await client_rw.v1.singleTweet(req.body.tweetId);
+    res.send(tweetData);
+  } catch (error) {
+    res.send(error);
+  }
 });
 //
 // app.get("/auth", passport.authenticate("twitter"));
