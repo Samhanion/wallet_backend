@@ -122,7 +122,7 @@ app.post("/metrics", async (req, res) => {
   // console.log("tweetData..", tweetData);
   res.send(tweetData);
 });
-
+//
 // app.get("/auth", passport.authenticate("twitter"));
 
 // app.get("/auth/callback", passport.authenticate("twitter", { failureRedirect: "/login" }), function (req, res) {
