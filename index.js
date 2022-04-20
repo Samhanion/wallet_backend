@@ -8,7 +8,10 @@ const jimp = require("jimp");
 const app = express();
 
 var bodyParser = require("body-parser");
+var cors = require("cors");
+
 app.use(bodyParser.json());
+app.use(cors());
 // const TwitterStrategy = require("passport-twitter");
 // const key = require("./keys.js");
 
