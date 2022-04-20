@@ -7,6 +7,8 @@ const { TwitterApi } = require("twitter-api-v2");
 const jimp = require("jimp");
 const app = express();
 
+var bodyParser = require("body-parser");
+app.use(bodyParser.json());
 // const TwitterStrategy = require("passport-twitter");
 // const key = require("./keys.js");
 
@@ -104,7 +106,7 @@ app.get("/twitter", async (req, res) => {
   }, 1000);
 });
 
-app.get("/metrics", async (req, res) => {
+app.post("/metrics", async (req, res) => {
   const client = new TwitterApi({
     appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
     appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
@@ -113,10 +115,11 @@ app.get("/metrics", async (req, res) => {
     accessToken: req.body.accessToken,
     accessSecret: req.body.accessSecret,
   });
+  console.log("body.....", req.body);
   const client_rw = client.readWrite;
 
   const tweetData = await client_rw.v1.singleTweet(req.body.tweetId);
-  console.log("tweetData..", tweetData);
+  // console.log("tweetData..", tweetData);
   res.send(tweetData);
 });
 
