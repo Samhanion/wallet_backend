@@ -115,7 +115,7 @@ app.get("/metrics", async (req, res) => {
   });
   const client_rw = client.readWrite;
 
-  const tweetData = await client_rw.v1.singleTweet(req.query.tweetId);
+  const tweetData = await client_rw.v1.singleTweet(req.body.tweetId);
   console.log("tweetData..", tweetData);
   res.send(tweetData);
 });
