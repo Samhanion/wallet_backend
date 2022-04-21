@@ -50,7 +50,7 @@ app.use(cors());
 //   cb(null, obj);
 // });
 
-let port = process.env.PORT || 3000;
+let port = process.env.PORT || 3001;
 
 // http://localhost:3000/twitter/?accessToken=1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N&accessSecret=c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX&tweet=Test%20Tweet
 app.get("/twitter", async (req, res) => {
@@ -105,7 +105,7 @@ app.get("/twitter", async (req, res) => {
     console.log(tweet.id_str);
     // let tweetId = tweet.id.toString();
 
-    res.send(tweet.id_str);
+    res.send(tweet);
   }, 1000);
 });
 //
