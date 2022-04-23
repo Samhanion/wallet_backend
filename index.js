@@ -353,9 +353,12 @@ app.get("/sendAirdrop", async (req, res) => {
   const gasPrice = connection.getGasPrice();
 
   // let privateKey = "0xfE9c0fE0D6b9101BB03D98F4daa0e1326CDEFc6A";
-  // let privateKey = "0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff";
-  let privateKey = "7c5a0c2e789ee03af4cc342586af897b56780207bcff695152a2bf3e4422f90d";
+  let privateKey = "0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff";
+
+  // let privateKey = "7c5a0c2e789ee03af4cc342586af897b56780207bcff695152a2bf3e4422f90d";
+
   let wallet = new ethers.Wallet(privateKey);
+  // const wallet = ethers.Wallet.fromMnemonic("toilet skate together scheme shaft answer elder fence wasp reflect dawn paper");
 
   console.log(wallet.address);
   console.log(wallet.privateKey);
@@ -363,7 +366,22 @@ app.get("/sendAirdrop", async (req, res) => {
   const signer = wallet.connect(connection);
   const recipient = req.query.recipient;
 
-  var contractAddress = "0x96f6bfE284061d3233B69683E593db260B375016";
+  // var contractAddress = "0x96f6bfE284061d3233B69683E593db260B375016";
+
+  // var contractAddress = "0x814F11f6bD1A717b21849da13553D457056DdC9C";
+
+  // polygon contract address
+  // var contractAddress = "0xfe4f5145f6e09952a5ba9e956ed0c25e3fa4c7f1"
+
+  //binance contract address
+  // var contractAddress = "0x0AB7A3464B3615bC41d006B38cd4f0B2F4038090";
+
+  // mumbai contract address
+  // var contractAddress = "0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1";
+
+  // walter token that I deployed myself
+  var contractAddress = "0x26db60aab218e651e812cb36fb67f604015aa53b";
+
   var contractAbiFragment = [
     {
       name: "transfer",
