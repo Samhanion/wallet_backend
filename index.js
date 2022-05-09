@@ -112,7 +112,6 @@ app.get("/twitter", async (req, res) => {
     res.send(error);
   }
 });
-//
 app.post("/metrics", async (req, res) => {
   const client = new TwitterApi({
     appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
