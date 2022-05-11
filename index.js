@@ -12,43 +12,6 @@ var cors = require("cors");
 
 app.use(bodyParser.json());
 app.use(cors());
-// const TwitterStrategy = require("passport-twitter");
-// const key = require("./keys.js");
-
-// app.use(session({ secret: "SECRET" })); // session secret
-// app.use(session({ secret: "keyboard cat", key: "sid", cookie: { secure: false } })); // session secret
-
-// app.use(passport.initialize());
-// app.use(passport.session()); // persistent login sessions
-
-// passport.use(
-//   new TwitterStrategy(
-//     {
-//       consumerKey: key.consumerKey,
-//       consumerSecret: key.consumerSecret,
-//       // callbackURL: "http://localhost:3000/auth/callback",
-//       callbackURL: "https://wallet-backend-api.herokuapp.com/auth/callback",
-//     },
-//     function (token, tokenSecret, profile, cb) {
-//       console.log("callback funtion fired!");
-//       console.log(profile);
-//       return cb(null, profile);
-//     },
-//     // function (token, tokenSecret, profile, cb) {
-//     //   User.findOrCreate({ twitterId: profile.id }, function (err, user) {
-//     //     return cb(err, user);
-//     //   });
-//     // },
-//   ),
-// );
-// passport.serializeUser(function (user, cb) {
-//   cb(null, user);
-// });
-
-// deserialize
-// passport.deserializeUser(function (obj, cb) {
-//   cb(null, obj);
-// });
 
 let port = process.env.PORT || 3001;
 
