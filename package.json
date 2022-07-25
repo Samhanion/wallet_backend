@@ -18,8 +18,11 @@
     "ethers": "^5.5.4",
     "express": "^4.17.3",
     "jimp": "^0.16.1",
-    "passport-twitter": "^1.0.4",
-    "twitter-api-v2": "^1.11.2"
+    "nodemon": "^2.0.19",
+    "swagger-jsdoc": "^6.2.1",
+    "swagger-ui-express": "^4.5.0",
+    "twitter-api-v2": "^1.11.2",
+    "web3": "^1.7.4"
   },
   "engines": {
     "node": "16.14.0"

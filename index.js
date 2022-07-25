@@ -5,6 +5,10 @@ const express = require("express");
 // const session = require("express-session");
 const { TwitterApi } = require("twitter-api-v2");
 const jimp = require("jimp");
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+const Web3 = require("web3");
+
 const app = express();
 
 var bodyParser = require("body-parser");
@@ -13,9 +17,34 @@ var cors = require("cors");
 app.use(bodyParser.json());
 app.use(cors());
 
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      title: "Decentrelon API",
+      version: "1.0.0",
+    },
+  },
+  apis: ["index.js"],
+};
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 let port = process.env.PORT || 3001;
 
-// http://localhost:3000/twitter/?accessToken=1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N&accessSecret=c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX&tweet=Test%20Tweet
+/**
+ * @swagger
+ * /status:
+ *  get:
+ *   description: Checks whether the server is running or not
+ *   responses:
+ *    '200':
+ *     description: Successfully retrieved address
+ */
+app.get("/status", (req, res) => {
+  return res.status(200).send({ status: "Up and running" });
+});
+
 app.get("/twitter", async (req, res) => {
   try {
     const client = new TwitterApi({
@@ -69,10 +98,10 @@ app.get("/twitter", async (req, res) => {
       console.log(tweet.id_str);
       // let tweetId = tweet.id.toString();
 
-      res.send(tweet);
+      return res.send(tweet);
     }, 1000);
   } catch (error) {
-    res.send(error);
+    return res.send(error);
   }
 });
 app.post("/metrics", async (req, res) => {
@@ -89,9 +118,9 @@ app.post("/metrics", async (req, res) => {
 
   try {
     const tweetData = await client_rw.v1.singleTweet(req.body.tweetId);
-    res.send(tweetData);
+    return res.send(tweetData);
   } catch (error) {
-    res.send(error);
+    return res.send(error);
   }
 });
 //
@@ -208,103 +237,316 @@ app.get("/airdrop", async (req, res) => {
       qouteCount: qouteCount,
       replyCount: replyCount,
     };
-    res.send(airdrop);
+    return res.send(airdrop);
   } catch (error) {
-    res.send(error);
+    return res.send(error);
   }
 });
-//
-app.get("/getAddress", (req, res) => {
+/**
+ * @swagger
+ * /address:
+ *  post:
+ *   description: Get wallet address of the user
+ *   parameters:
+ *   - name: Mnemonic
+ *     description: Mnemonic of the user in Json format
+ *     example: {mnemonic : "galaxy celery fabric room poem team hurt flavor wrap proud index choose"}
+ *     in: body
+ *     required: true
+ *   responses:
+ *    '200':
+ *     description: Successfully retrieved address
+ */
+app.post("/address", (req, res) => {
   try {
+    // the one that has some binance balance
     // 0x44DD1abdA1bC003e073c5CA21BdCAB4EA91D9531
-    //   galaxy celery fabric roof poem team hurt flavor wrap proud index choose
-    let mnemonic = req.query.mnemonic;
+    // galaxy celery fabric roof poem team hurt flavor wrap proud index choose
+    if (!ethers.utils.isValidMnemonic(req.body.mnemonic)) return res.send("Invalid Mnemonic");
+    let mnemonic = req.body.mnemonic;
     const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 
-    res.send(wallet.address);
+    return res.send(wallet.address);
   } catch (error) {
-    res.send(error);
+    return res.send(error);
   }
 });
-//
-app.get("/createWallet", (req, res) => {
+/**
+ * @swagger
+ * /create-wallet:
+ *  get:
+ *   description: create a new wallet for new users
+ *   responses:
+ *    '200':
+ *     description: Successfully retrieved address
+ */
+app.get("/create-wallet", (req, res) => {
   let wallet = ethers.Wallet.createRandom();
   let response = {
     address: wallet.address,
     mnemonic: wallet.mnemonic.phrase,
     privateKey: wallet.privateKey,
   };
-  res.send(response);
+  return res.send(response);
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-// http://localhost:3000/sendTransaction/?mnemonic=toilet skate together scheme shaft answer elder fence wasp reflect dawn paper&network=eth/rinkeby&recipient=0x44DD1abdA1bC003e073c5CA21BdCAB4EA91D9531&amount=1&contractAddress=0x814f11f6bd1a717b21849da13553d457056ddc9c
-// send transaction
-app.get("/sendTransaction", async (req, res) => {
+/**
+ * @swagger
+ * /send-transaction:
+ *  post:
+ *   description: send tokens to another user
+ *   parameters:
+ *   - name: network
+ *     description: Network that you're sending across. Accepted values include ( "etheruem" , "polygon" , "mumbai" , "binance" )
+ *     example:  "etheruem"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: mnenomic
+ *     description: mnemonic of the user who's sending the tokens
+ *     example:  "galaxy celery fabric roof poem team hurt flavor wrap proud index big"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: recipient
+ *     description: address of the user who's receiving the tokens
+ *     example:  "0x44DD1abdA1bC003e073c5CA21BdCAB4EA91D9531"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: token_contract_address
+ *     description: address of the token contract
+ *     example:  "0x814f11f6bd1a717b21849da13553d457056ddc9c"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: amount
+ *     description: amount of tokens to be sent
+ *     example:  "1"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   responses:
+ *    '200':
+ *     description: Successfully retrieved address
+ */
+app.post("/send-transaction", async (req, res) => {
   try {
-    // https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/eth/ropsten
-    const connection = new ethers.providers.JsonRpcProvider(`https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/${req.query.network}`);
-    const gasPrice = connection.getGasPrice();
-    const wallet = ethers.Wallet.fromMnemonic(req.query.mnemonic);
+    if (!req.body.mnemonic || !req.body.network || !req.body.recipient || !req.body.amount || !req.body.contractAddress) {
+      return res.send("Missing parameters");
+    } else {
+      if (!ethers.utils.isValidMnemonic(req.body.mnemonic))
+        return res.send("Invalid mnemonic. Please make sure you don't have an extra space or typo in your mnemonic");
+      const network = req.body.network;
+      const mnemonic = req.body.mnemonic;
+      const recipient = req.body.recipient;
+      const contractAddress = req.body.contractAddress;
+      const amount = req.body.amount;
 
-    const signer = wallet.connect(connection);
-    const recipient = req.query.recipient;
-    // const tx = {
-    //   from: wallet.address,
-    //   to: recipient,
-    //   value: ethers.utils.parseEther(req.query.amount),
-    //   gasPrice: gasPrice,
-    //   gasLimit: ethers.utils.hexlify(100000),
-    //   nonce: connection.getTransactionCount(wallet.address, "latest"),
-    // };
-    // You can also use an ENS name for the contract address
-    // const daiAddress = "dai.tokens.ethers.eth";
+      let url;
+      if (network == "etheruem") url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK";
+      else if (network == "polygon") url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm";
+      else if (network == "mumbai") url = "https://polygon-mumbai.g.alchemy.com/v2/ZrDBV9VTrRh6TKZBnHQPILHZbHlPqwTk";
+      else if (network == "binance") url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/";
+      else return res.send("Invalid network. Accepted values include ( 'etheruem' , 'polygon' , 'mumbai' , 'binance' )");
 
-    // Connect to the contract
-    // dai contract address
-    // var contractAddress = "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa";
-    // test contract address ( we created it for testing.. )
-    // var contractAddress = "0x814f11f6bd1a717b21849da13553d457056ddc9c";
-    var contractAddress = req.query.contractAddress;
-    var contractAbiFragment = [
-      {
-        name: "transfer",
-        type: "function",
-        inputs: [
-          {
-            name: "_to",
-            type: "address",
-          },
-          {
-            type: "uint256",
-            name: "_tokens",
-          },
-        ],
-        constant: false,
-        outputs: [],
-        payable: false,
-      },
-    ];
-    var contract = new ethers.Contract(contractAddress, contractAbiFragment, signer);
+      // TODO : check if recipient address is valid
+      // web3.utils.isAddress(recipient)
 
-    // How many tokens?
-    var numberOfDecimals = 18;
-    var numberOfTokens = ethers.utils.parseUnits(req.query.amount, numberOfDecimals);
+      const connection = new ethers.providers.JsonRpcProvider(url);
+      // const gasPrice = connection.getGasPrice();
+      const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 
-    // Send tokens
-    contract.transfer(recipient, numberOfTokens).then(function (tx) {
-      console.log(tx);
-      res.send(tx);
-    });
+      const signer = wallet.connect(connection);
+      // const tx = {
+      //   from: wallet.address,
+      //   to: recipient,
+      //   value: ethers.utils.parseEther(req.query.amount),
+      //   gasPrice: gasPrice,
+      //   gasLimit: ethers.utils.hexlify(100000),
+      //   nonce: connection.getTransactionCount(wallet.address, "latest"),
+      // };
+      // You can also use an ENS name for the contract address
+      // const daiAddress = "dai.tokens.ethers.eth";
+
+      // Connect to the contract
+      // dai contract address
+      // var contractAddress = "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa";
+      // test contract address ( we created it for testing.. )
+      // var contractAddress = "0x814f11f6bd1a717b21849da13553d457056ddc9c";
+      var contractAbiFragment = [
+        {
+          name: "transfer",
+          type: "function",
+          inputs: [
+            {
+              name: "_to",
+              type: "address",
+            },
+            {
+              type: "uint256",
+              name: "_tokens",
+            },
+          ],
+          constant: false,
+          outputs: [],
+          payable: false,
+        },
+      ];
+      var contract = new ethers.Contract(contractAddress, contractAbiFragment, signer);
+
+      // How many tokens?
+      var numberOfDecimals = 18;
+      var numberOfTokens = ethers.utils.parseUnits(amount, numberOfDecimals);
+
+      // Send tokens
+      contract.transfer(recipient, numberOfTokens).then(function (tx) {
+        console.log(tx);
+        return res.send(tx);
+      });
+    }
   } catch (error) {
-    res.send(error);
+    return res.send(error);
   }
 
   // const transaction = await signer.sendTransaction(tx);
   // console.log(transaction);
   // res.send(transaction);
 });
+
+/**
+ * @swagger
+ * /swap:
+ *  post:
+ *   description: swap one token for another. MAKE SURE TO CALL THE /QUOTE ENDPOINT IN THE FRONT END FIRST BEFORE CALLING THIS ENDPOINT
+ *   parameters:
+ *   - name: network
+ *     description: Network that you're swapping across. Accepted values include ( "etheruem" , "polygon" , "mumbai" , "binance" )
+ *     example:  "etheruem"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: mnenomic
+ *     description: mnemonic of the user who's swapping the tokens
+ *     example:  "galaxy celery fabric roof poem team hurt flavor wrap proud index big"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: tokenIn
+ *     description: contract address of the token you're selling
+ *     example:  "0x6b175474e89094c44da98b954eedeac495271d0f"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: tokenOut
+ *     description: contract address of the token you're receiving
+ *     example:  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: amount
+ *     description: amount of tokens to be swapped
+ *     example:  "1"
+ *     in: body
+ *     required: true
+ *     type: string
+ *   - name: slippage
+ *     description: limit of price slippage you are willing to accept in percentage, may be set with decimals. &slippage=0.5 means 0.5% slippage is acceptable. Low values increase chances that transaction will fail, high values increase chances of front running. Set values in the range from 0 to 50. if not provided , default value is 0.5
+ *     example: "0.5"
+ *     in: body
+ *     required: false
+ *     type: string
+ *   responses:
+ *    '200':
+ *     description: Successfully retrieved address
+ */
+app.post("/swap", async (req, res) => {
+  // TODO : Make sure to hit the quote API first with the same paramters on the frontend
+  try {
+    if (!req.body.mnemonic || !req.body.network || !req.body.tokenIn || !req.body.amount || !req.body.tokenOut) {
+      return res.send("Missing parameters");
+    } else {
+      if (!ethers.utils.isValidMnemonic(req.body.mnemonic))
+        return res.send("Invalid mnemonic. Please make sure you don't have an extra space or typo in your mnemonic");
+      const network = req.body.network;
+      const mnemonic = req.body.mnemonic;
+      const tokenIn = req.body.tokenIn;
+      const tokenOut = req.body.tokenOut;
+      const amount = Web3.utils.toWei(req.body.amount, "ether");
+      const slippage = req.body.slippage || 0.5;
+      // TODO : CHANGE REFERRER ADDRESS WITH THE ONE THAT IS GONNA FINALLY RECEIVE THE FEES
+      const referrerAddress = "0xec6bb18E599B146E13f537e7145F721983A06e2e";
+      const fee = "0.4";
+
+      let url, networkId;
+      if (network == "etheruem") (url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK"), (networkId = 1);
+      else if (network == "polygon") (url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm"), (networkId = 137);
+      else if (network == "mumbai") return res.send("Swapping is not supported on testnets, please use polygon, etheruem or binance");
+      else if (network == "binance")
+        (url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/"), (networkId = 56);
+      else return res.send("Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance");
+
+      const provider = new Web3.providers.HttpProvider(url);
+      const web3 = new Web3(provider);
+      let mnemonicWallet = ethers.Wallet.fromMnemonic(mnemonic);
+      console.log(mnemonicWallet.address);
+      const PRIVATE_KEY = mnemonicWallet.privateKey; // Set private key of your wallet. Be careful! Don't share this key to anyone!
+      const wallet = web3.eth.accounts.wallet.add(PRIVATE_KEY);
+
+      // matic address
+      // 0xCC42724C6683B7E57334c4E856f4c9965ED682bD
+
+      // dai address
+
+      console.log("tokenIn ", tokenIn);
+      console.log("tokenOut ", tokenOut);
+      console.log("amount ", amount);
+      console.log("wallet.address ", wallet.address);
+
+      // giving 1inch router a permission to access your tokenIn address
+      const permission = await axios.get(`https://api.1inch.io/v4.0/${networkId}/approve/transaction?tokenAddress=${tokenIn}&amount=${amount}`);
+      console.log("wallet allow amount adjusted: ", permission.data);
+      const gasLimit = await web3.eth.estimateGas({
+        ...permission.data,
+        from: mnemonicWallet.address,
+      });
+      permission.data.gas = gasLimit;
+      permission.data.from = mnemonicWallet.address;
+      // get estimated gas
+      console.log("permission transaction: ", permission.data);
+      let tx = await web3.eth.sendTransaction(permission.data);
+      if (tx.status) {
+        console.log("Permission Granted! :)");
+      }
+
+      // const response = await axios.get(
+      //   `https://api.1inch.exchange/v3.0/137/swap?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&toTokenAddress=0x8f3cf7ad23cd3cadbd9735aff958023239c6a063&amount=1000000000000000000&fromAddress=${wallet.address}&slippage=0.1&disableEstimate=true`,
+      // );
+      const response = await axios.get(
+        `https://api.1inch.io/v4.0/${networkId}/swap?fromTokenAddress=${tokenIn}&toTokenAddress=${tokenOut}&amount=${amount}&fromAddress=${wallet.address}&slippage=${slippage}&disableEstimate=true&referrerAddress=${referrerAddress}&fee=${fee}`,
+      );
+      if (response.data) {
+        // res.send(response.data);
+        let data = response.data;
+        const gasLimit = await web3.eth.estimateGas({
+          ...response.data.tx,
+          from: mnemonicWallet.address,
+        });
+        data.tx.gas = gasLimit;
+        // get estimated gas
+        console.log(data.tx);
+        let tx = await web3.eth.sendTransaction(data.tx);
+        if (tx.status) {
+          console.log("Swap Successfull! :)");
+          return res.send(tx);
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 app.get("/sendAirdrop", async (req, res) => {
   try {
     // https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/eth/ropsten
@@ -369,10 +611,10 @@ app.get("/sendAirdrop", async (req, res) => {
     // // Send tokens
     contract.transfer(recipient, numberOfTokens).then(function (tx) {
       console.log(tx);
-      res.send(tx);
+      return res.send(tx);
     });
   } catch (error) {
-    res.send(error);
+    return res.send(error);
   }
 });
 app.listen(port, () => {
