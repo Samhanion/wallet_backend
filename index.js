@@ -32,6 +32,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 let port = process.env.PORT || 3001;
 
+// TODO : make sure all responses have the correct statstus code
+
 /**
  * @swagger
  * /status:
@@ -314,7 +316,7 @@ app.get("/create-wallet", (req, res) => {
  *     in: body
  *     required: true
  *     type: string
- *   - name: token_contract_address
+ *   - name: contractAddress
  *     description: address of the token contract
  *     example:  "0x814f11f6bd1a717b21849da13553d457056ddc9c"
  *     in: body
