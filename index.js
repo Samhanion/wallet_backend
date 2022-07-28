@@ -292,6 +292,7 @@ app.get("/create-wallet", (req, res) => {
   return res.send(response);
 });
 
+// FIXME : swagger sending the wrong data, make sure that it works
 /**
  * @swagger
  * /send-transaction:
@@ -428,7 +429,7 @@ app.post("/send-transaction", async (req, res) => {
  *     in: body
  *     required: true
  *     type: string
- *   - name: mnenomic
+ *   - name: mnemomic
  *     description: mnemonic of the user who's swapping the tokens
  *     example:  "galaxy celery fabric roof poem team hurt flavor wrap proud index big"
  *     in: body
