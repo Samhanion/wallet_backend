@@ -634,8 +634,6 @@ app.listen(port, () => {
  *  parameters:
  *  - name : transaction
  *    in : body
- *  - name : walletAddress
- *    in : body
  *  - name : network
  *    in : body
  *  - name : mnemonic
@@ -645,7 +643,7 @@ app.listen(port, () => {
  *     description: Successfully retrieved address
  */
 app.post("/permission-request", async (req, res) => {
-  if (!req.body.transaction || !req.body.walletAddress || !req.body.network || !req.body.mnemonic) {
+  if (!req.body.transaction || !req.body.network || !req.body.mnemonic) {
     return res.status(400).send("Invalid parameters");
   }
   let url, networkId;
@@ -664,7 +662,7 @@ app.post("/permission-request", async (req, res) => {
   const web3 = new Web3(provider);
   web3.eth.accounts.wallet.add(PRIVATE_KEY);
   const transaction = req.body.transaction;
-  const walletAddress = req.body.walletAddress;
+  const walletAddress = mnemonicWallet.address;
   const gasLimit = await web3.eth.estimateGas({
     ...transaction,
     from: walletAddress,
