@@ -466,87 +466,86 @@ app.post("/send-transaction", async (req, res) => {
 app.post("/swap", async (req, res) => {
   // TODO : Make sure to hit the quote API first with the same paramters on the frontend
   try {
-    // if (!req.body.mnemonic || !req.body.network || !req.body.tokenIn || !req.body.amount || !req.body.tokenOut) {
-    //   return res.send("Missing parameters");
-    // }
-    // else {
-    if (!ethers.utils.isValidMnemonic(req.body.mnemonic))
-      return res.send("Invalid mnemonic. Please make sure you don't have an extra space or typo in your mnemonic");
-    const network = req.body.network;
-    const mnemonic = req.body.mnemonic;
-    const tokenIn = req.body.tokenIn;
-    const tokenOut = req.body.tokenOut;
-    const amount = Web3.utils.toWei(req.body.amount, "ether");
-    const slippage = req.body.slippage || 0.5;
-    // TODO : CHANGE REFERRER ADDRESS WITH THE ONE THAT IS GONNA FINALLY RECEIVE THE FEES
-    const referrerAddress = "0xec6bb18E599B146E13f537e7145F721983A06e2e";
-    const fee = "0.4";
+    if (!req.body.mnemonic || !req.body.network || !req.body.tokenIn || !req.body.amount || !req.body.tokenOut) {
+      return res.send("Missing parameters");
+    } else {
+      if (!ethers.utils.isValidMnemonic(req.body.mnemonic))
+        return res.send("Invalid mnemonic. Please make sure you don't have an extra space or typo in your mnemonic");
+      const network = req.body.network;
+      const mnemonic = req.body.mnemonic;
+      const tokenIn = req.body.tokenIn;
+      const tokenOut = req.body.tokenOut;
+      const amount = Web3.utils.toWei(req.body.amount, "ether");
+      const slippage = req.body.slippage || 0.5;
+      // TODO : CHANGE REFERRER ADDRESS WITH THE ONE THAT IS GONNA FINALLY RECEIVE THE FEES
+      const referrerAddress = "0xec6bb18E599B146E13f537e7145F721983A06e2e";
+      const fee = "0.4";
 
-    let url, networkId;
-    if (network == "etheruem") (url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK"), (networkId = 1);
-    else if (network == "polygon") (url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm"), (networkId = 137);
-    else if (network == "mumbai") return res.send("Swapping is not supported on testnets, please use polygon, etheruem or binance");
-    else if (network == "binance")
-      (url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/"), (networkId = 56);
-    else return res.send("Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance");
+      let url, networkId;
+      if (network == "etheruem") (url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK"), (networkId = 1);
+      else if (network == "polygon") (url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm"), (networkId = 137);
+      else if (network == "mumbai") return res.send("Swapping is not supported on testnets, please use polygon, etheruem or binance");
+      else if (network == "binance")
+        (url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/"), (networkId = 56);
+      else return res.send("Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance");
 
-    const provider = new Web3.providers.HttpProvider(url);
-    const web3 = new Web3(provider);
-    let mnemonicWallet = ethers.Wallet.fromMnemonic(mnemonic);
-    console.log(mnemonicWallet.address);
-    const PRIVATE_KEY = mnemonicWallet.privateKey; // Set private key of your wallet. Be careful! Don't share this key to anyone!
-    const wallet = web3.eth.accounts.wallet.add(PRIVATE_KEY);
+      const provider = new Web3.providers.HttpProvider(url);
+      const web3 = new Web3(provider);
+      let mnemonicWallet = ethers.Wallet.fromMnemonic(mnemonic);
+      console.log(mnemonicWallet.address);
+      const PRIVATE_KEY = mnemonicWallet.privateKey; // Set private key of your wallet. Be careful! Don't share this key to anyone!
+      const wallet = web3.eth.accounts.wallet.add(PRIVATE_KEY);
 
-    // matic address
-    // 0xCC42724C6683B7E57334c4E856f4c9965ED682bD
+      // matic address
+      // 0xCC42724C6683B7E57334c4E856f4c9965ED682bD
 
-    // dai address
+      // dai address
 
-    console.log("tokenIn ", tokenIn);
-    console.log("tokenOut ", tokenOut);
-    console.log("amount ", amount);
-    console.log("wallet.address ", wallet.address);
+      // console.log("tokenIn ", tokenIn);
+      // console.log("tokenOut ", tokenOut);
+      // console.log("amount ", amount);
+      // console.log("wallet.address ", wallet.address);
 
-    // giving 1inch router a permission to access your tokenIn address
-    const permission = await axios.get(`https://api.1inch.io/v4.0/${networkId}/approve/transaction?tokenAddress=${tokenIn}&amount=${amount}`);
-    console.log("wallet allow amount adjusted: ", permission.data);
-    const gasLimit = await web3.eth.estimateGas({
-      ...permission.data,
-      from: mnemonicWallet.address,
-    });
-    permission.data.gas = gasLimit;
-    permission.data.from = mnemonicWallet.address;
-    // get estimated gas
-    console.log("permission transaction: ", permission.data);
-    let tx = await web3.eth.sendTransaction(permission.data);
-    if (tx.status) {
-      console.log("Permission Granted! :)");
-    }
+      // giving 1inch router a permission to access your tokenIn address
+      // const permission = await axios.get(`https://api.1inch.io/v4.0/${networkId}/approve/transaction?tokenAddress=${tokenIn}&amount=${amount}`);
+      // console.log("wallet allow amount adjusted: ", permission.data);
+      // const gasLimit = await web3.eth.estimateGas({
+      //   ...permission.data,
+      //   from: mnemonicWallet.address,
+      // });
+      // permission.data.gas = gasLimit;
+      // permission.data.from = mnemonicWallet.address;
+      // // get estimated gas
+      // console.log("permission transaction: ", permission.data);
+      // let tx = await web3.eth.sendTransaction(permission.data);
+      // if (tx.status) {
+      //   console.log("Permission Granted! :)");
+      // }
 
-    // const response = await axios.get(
-    //   `https://api.1inch.exchange/v3.0/137/swap?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&toTokenAddress=0x8f3cf7ad23cd3cadbd9735aff958023239c6a063&amount=1000000000000000000&fromAddress=${wallet.address}&slippage=0.1&disableEstimate=true`,
-    // );
-    const response = await axios.get(
-      `https://api.1inch.io/v4.0/${networkId}/swap?fromTokenAddress=${tokenIn}&toTokenAddress=${tokenOut}&amount=${amount}&fromAddress=${wallet.address}&slippage=${slippage}&disableEstimate=true&referrerAddress=${referrerAddress}&fee=${fee}`,
-    );
-    if (response.data) {
-      // res.send(response.data);
-      let data = response.data;
-      const gasLimit = await web3.eth.estimateGas({
-        ...response.data.tx,
-        from: mnemonicWallet.address,
-      });
-      //
-      data.tx.gas = gasLimit;
-      // get estimated gas
-      console.log(data.tx);
-      let tx = await web3.eth.sendTransaction(data.tx);
-      if (tx.status) {
-        console.log("Swap Successfull! :)");
-        return res.send(tx);
+      // const response = await axios.get(
+      //   `https://api.1inch.exchange/v3.0/137/swap?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&toTokenAddress=0x8f3cf7ad23cd3cadbd9735aff958023239c6a063&amount=1000000000000000000&fromAddress=${wallet.address}&slippage=0.1&disableEstimate=true`,
+      // );
+      const response = await axios.get(
+        `https://api.1inch.io/v4.0/${networkId}/swap?fromTokenAddress=${tokenIn}&toTokenAddress=${tokenOut}&amount=${amount}&fromAddress=${wallet.address}&slippage=${slippage}&disableEstimate=true&referrerAddress=${referrerAddress}&fee=${fee}`,
+      );
+      if (response.data) {
+        // res.send(response.data);
+        let data = response.data;
+        const gasLimit = await web3.eth.estimateGas({
+          ...response.data.tx,
+          from: mnemonicWallet.address,
+        });
+        //
+        data.tx.gas = gasLimit;
+        // get estimated gas
+        // console.log(data.tx);
+        let tx = await web3.eth.sendTransaction(data.tx);
+        if (tx.status) {
+          // console.log("Swap Successfull! :)");
+          return res.send(tx);
+        }
       }
     }
-    // }
   } catch (e) {
     console.log(e);
   }
