@@ -1,33 +1,36 @@
-const { ethers } = require("ethers");
-const axios = require("axios");
+const { ethers } = require('ethers');
+const axios = require('axios');
 // const passport = require("passport");
-const express = require("express");
+const express = require('express');
 // const session = require("express-session");
-const { TwitterApi } = require("twitter-api-v2");
-const jimp = require("jimp");
-const swaggerJsDoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
-const Web3 = require("web3");
+const { TwitterApi } = require('twitter-api-v2');
+const jimp = require('jimp');
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const Web3 = require('web3');
 
 const app = express();
-
-var bodyParser = require("body-parser");
-var cors = require("cors");
+var bodyParser = require('body-parser');
+var cors = require('cors');
 
 app.use(bodyParser.json());
 app.use(cors());
 
+const { Client } = require('pg');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const swaggerOptions = {
   swaggerDefinition: {
     info: {
-      title: "Decentrelon API",
-      version: "1.0.0",
+      title: 'Decentrelon API',
+      version: '1.0.0',
     },
   },
-  apis: ["index.js"],
+  apis: ['index.js'],
 };
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 let port = process.env.PORT || 3001;
@@ -43,15 +46,15 @@ let port = process.env.PORT || 3001;
  *    '200':
  *     description: Successfully retrieved address
  */
-app.get("/status", (req, res) => {
-  return res.status(200).send({ status: "Up and running" });
+app.get('/status', (req, res) => {
+  return res.status(200).send({ status: 'Up and running' });
 });
 
-app.get("/twitter", async (req, res) => {
+app.get('/twitter', async (req, res) => {
   try {
     const client = new TwitterApi({
-      appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
-      appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
+      appKey: 'Yi4jGDCyAmdbskxkPSfo7HUhL',
+      appSecret: 'sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr',
       // accessToken: "1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N",
       // accessSecret: "c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX",
       accessToken: req.query.accessToken,
@@ -59,7 +62,7 @@ app.get("/twitter", async (req, res) => {
     });
     const client_rw = client.readWrite;
 
-    const tweetImg = await jimp.read("./walter_claim_tweet.jpg");
+    const tweetImg = await jimp.read('./walter_claim_tweet.jpg');
     const profileImg = await jimp.read(req.query.profileImg);
     // const mask = await jimp.read("./rounded_borders.jpg");
 
@@ -78,12 +81,12 @@ app.get("/twitter", async (req, res) => {
     tweetImg.composite(profileImg, 1170, 960);
 
     // tweetImg.resize(400, 400);
-    tweetImg.write("claim.jpg");
+    tweetImg.write('claim.jpg');
 
     setTimeout(async () => {
       const mediaIds = await Promise.all([
         // file path
-        client.v1.uploadMedia("./claim.jpg"),
+        client.v1.uploadMedia('./claim.jpg'),
         // from a buffer, for example obtained with an image modifier package
         // client.v1.uploadMedia(Buffer.from(rotatedImage), { type: "png" }),
       ]);
@@ -94,8 +97,8 @@ app.get("/twitter", async (req, res) => {
       let tweet = await client_rw.v1.tweet(tweetText, { media_ids: mediaIds });
 
       let user = await client_rw.v2.me();
-      console.log("user", user);
-      console.log("tweet", tweet);
+      console.log('user', user);
+      console.log('tweet', tweet);
 
       console.log(tweet.id_str);
       // let tweetId = tweet.id.toString();
@@ -106,16 +109,16 @@ app.get("/twitter", async (req, res) => {
     return res.send(error);
   }
 });
-app.post("/metrics", async (req, res) => {
+app.post('/metrics', async (req, res) => {
   const client = new TwitterApi({
-    appKey: "Yi4jGDCyAmdbskxkPSfo7HUhL",
-    appSecret: "sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr",
+    appKey: 'Yi4jGDCyAmdbskxkPSfo7HUhL',
+    appSecret: 'sLOZNPU4nvFn10PLMiDE802RRa85D5mQCz3QFbyin5hCDtpOVr',
     // accessToken: "1502747448120430601-F56GryQb02UVewXDunYBtjSRIBev5N",
     // accessSecret: "c7c2lfERKBvriXpj4Ql5AMZP7qlEXUCU8dufyU0p9WqpX",
     accessToken: req.body.accessToken,
     accessSecret: req.body.accessSecret,
   });
-  console.log("body.....", req.body);
+  console.log('body.....', req.body);
   const client_rw = client.readWrite;
 
   try {
@@ -147,15 +150,15 @@ app.post("/metrics", async (req, res) => {
 //   res.send("home");
 // });
 // air droping
-app.get("/airdrop", async (req, res) => {
+app.get('/airdrop', async (req, res) => {
   try {
     let twitterName = req.query.name;
     let twitterId = await axios({
       url: `https://api.twitter.com/2/users/by/username/${twitterName}`,
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+        Accept: 'application/json',
+        Authorization: 'Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL',
       },
     });
     console.log(twitterId.data.data);
@@ -163,10 +166,10 @@ app.get("/airdrop", async (req, res) => {
 
     let followers = await axios({
       url: `https://api.twitter.com/2/users/${twitterId}?user.fields=public_metrics`,
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+        Accept: 'application/json',
+        Authorization: 'Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL',
       },
     });
     followers = followers.data.data.public_metrics.followers_count;
@@ -201,10 +204,10 @@ app.get("/airdrop", async (req, res) => {
       //  getting all tweets from the last month till now
       let result = await axios({
         url: url,
-        method: "GET",
+        method: 'GET',
         headers: {
-          Accept: "application/json",
-          Authorization: "Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL",
+          Accept: 'application/json',
+          Authorization: 'Bearer AAAAAAAAAAAAAAAAAAAAAMnFaQEAAAAA96vmdQ7QkVlw4CjRNHtIa5kshwQ%3DzREAjqbqtd3zr3IqjNlyCAoRjNt4hLEI2ZexzIMSPHvUsZ8JHL',
         },
       });
       // console.log(result.data.data);
@@ -223,16 +226,16 @@ app.get("/airdrop", async (req, res) => {
       } else {
         let pagination_token = result.data.meta.next_token;
         // console.log(pagination_token);
-        if (!url.includes("pagination_token")) url += `&pagination_token=${pagination_token}`;
-        else url = url.split("&pagination_token=")[0] + `&pagination_token=${pagination_token}`;
+        if (!url.includes('pagination_token')) url += `&pagination_token=${pagination_token}`;
+        else url = url.split('&pagination_token=')[0] + `&pagination_token=${pagination_token}`;
       }
       // console.log(result.data.meta);
     }
     console.log(tweetsIds.length);
     console.log(tweets);
-    console.log("likeCount ", likeCount);
-    console.log("qouteCount ", qouteCount);
-    console.log("replyCount ", replyCount);
+    console.log('likeCount ', likeCount);
+    console.log('qouteCount ', qouteCount);
+    console.log('replyCount ', replyCount);
     let airdrop = {
       followers: followers,
       likeCount: likeCount,
@@ -259,12 +262,12 @@ app.get("/airdrop", async (req, res) => {
  *    '200':
  *     description: Successfully retrieved address
  */
-app.post("/address", (req, res) => {
+app.post('/address', (req, res) => {
   try {
     // the one that has some binance balance
     // 0x44DD1abdA1bC003e073c5CA21BdCAB4EA91D9531
     // galaxy celery fabric roof poem team hurt flavor wrap proud index choose
-    if (!ethers.utils.isValidMnemonic(req.body.mnemonic)) return res.send("Invalid Mnemonic");
+    if (!ethers.utils.isValidMnemonic(req.body.mnemonic)) return res.send('Invalid Mnemonic');
     let mnemonic = req.body.mnemonic;
     const wallet = ethers.Wallet.fromMnemonic(mnemonic);
 
@@ -282,7 +285,7 @@ app.post("/address", (req, res) => {
  *    '200':
  *     description: Successfully retrieved address
  */
-app.get("/create-wallet", (req, res) => {
+app.get('/create-wallet', (req, res) => {
   let wallet = ethers.Wallet.createRandom();
   let response = {
     address: wallet.address,
@@ -333,10 +336,10 @@ app.get("/create-wallet", (req, res) => {
  *    '200':
  *     description: Successfully retrieved address
  */
-app.post("/send-transaction", async (req, res) => {
+app.post('/send-transaction', async (req, res) => {
   try {
     if (!req.body.mnemonic || !req.body.network || !req.body.recipient || !req.body.amount || !req.body.contractAddress) {
-      return res.send("Missing parameters");
+      return res.send('Missing parameters');
     } else {
       if (!ethers.utils.isValidMnemonic(req.body.mnemonic))
         return res.send("Invalid mnemonic. Please make sure you don't have an extra space or typo in your mnemonic");
@@ -347,10 +350,10 @@ app.post("/send-transaction", async (req, res) => {
       const amount = req.body.amount;
 
       let url;
-      if (network == "etheruem") url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK";
-      else if (network == "polygon") url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm";
-      else if (network == "mumbai") url = "https://polygon-mumbai.g.alchemy.com/v2/ZrDBV9VTrRh6TKZBnHQPILHZbHlPqwTk";
-      else if (network == "binance") url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/";
+      if (network == 'etheruem') url = 'https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK';
+      else if (network == 'polygon') url = 'https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm';
+      else if (network == 'mumbai') url = 'https://polygon-mumbai.g.alchemy.com/v2/ZrDBV9VTrRh6TKZBnHQPILHZbHlPqwTk';
+      else if (network == 'binance') url = 'https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/';
       else return res.send("Invalid network. Accepted values include ( 'etheruem' , 'polygon' , 'mumbai' , 'binance' )");
 
       // TODO : check if recipient address is valid
@@ -379,16 +382,16 @@ app.post("/send-transaction", async (req, res) => {
       // var contractAddress = "0x814f11f6bd1a717b21849da13553d457056ddc9c";
       var contractAbiFragment = [
         {
-          name: "transfer",
-          type: "function",
+          name: 'transfer',
+          type: 'function',
           inputs: [
             {
-              name: "_to",
-              type: "address",
+              name: '_to',
+              type: 'address',
             },
             {
-              type: "uint256",
-              name: "_tokens",
+              type: 'uint256',
+              name: '_tokens',
             },
           ],
           constant: false,
@@ -463,11 +466,11 @@ app.post("/send-transaction", async (req, res) => {
  *    '200':
  *     description: Successfully retrieved address
  */
-app.post("/swap", async (req, res) => {
+app.post('/swap', async (req, res) => {
   // TODO : Make sure to hit the quote API first with the same paramters on the frontend
   try {
     if (!req.body.mnemonic || !req.body.network || !req.body.tokenIn || !req.body.amount || !req.body.tokenOut) {
-      return res.send("Missing parameters");
+      return res.send('Missing parameters');
     } else {
       if (!ethers.utils.isValidMnemonic(req.body.mnemonic))
         return res.send("Invalid mnemonic. Please make sure you don't have an extra space or typo in your mnemonic");
@@ -475,19 +478,19 @@ app.post("/swap", async (req, res) => {
       const mnemonic = req.body.mnemonic;
       const tokenIn = req.body.tokenIn;
       const tokenOut = req.body.tokenOut;
-      const amount = Web3.utils.toWei(req.body.amount, "ether");
+      const amount = Web3.utils.toWei(req.body.amount, 'ether');
       const slippage = req.body.slippage || 0.5;
       // TODO : CHANGE REFERRER ADDRESS WITH THE ONE THAT IS GONNA FINALLY RECEIVE THE FEES
-      const referrerAddress = "0xec6bb18E599B146E13f537e7145F721983A06e2e";
-      const fee = "0.4";
+      const referrerAddress = '0xec6bb18E599B146E13f537e7145F721983A06e2e';
+      const fee = '0.4';
 
       let url, networkId;
-      if (network == "etheruem") (url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK"), (networkId = 1);
-      else if (network == "polygon") (url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm"), (networkId = 137);
-      else if (network == "mumbai") return res.send("Swapping is not supported on testnets, please use polygon, etheruem or binance");
-      else if (network == "binance")
-        (url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/"), (networkId = 56);
-      else return res.send("Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance");
+      if (network == 'etheruem') (url = 'https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK'), (networkId = 1);
+      else if (network == 'polygon') (url = 'https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm'), (networkId = 137);
+      else if (network == 'mumbai') return res.send('Swapping is not supported on testnets, please use polygon, etheruem or binance');
+      else if (network == 'binance')
+        (url = 'https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/'), (networkId = 56);
+      else return res.send('Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance');
 
       const provider = new Web3.providers.HttpProvider(url);
       const web3 = new Web3(provider);
@@ -551,14 +554,14 @@ app.post("/swap", async (req, res) => {
   }
 });
 
-app.get("/sendAirdrop", async (req, res) => {
+app.get('/sendAirdrop', async (req, res) => {
   try {
     // https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/eth/ropsten
     const connection = new ethers.providers.JsonRpcProvider(`https://speedy-nodes-nyc.moralis.io/47ef2509ed164f0635b5048e/polygon/mumbai`);
     const gasPrice = connection.getGasPrice();
 
     // let privateKey = "0xfE9c0fE0D6b9101BB03D98F4daa0e1326CDEFc6A";
-    let privateKey = "0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff";
+    let privateKey = '0xfc237f4bf6e3e840549a9bbec4c60d362acd68d628f862d638b29ea9d4c021ff';
 
     // let privateKey = "7c5a0c2e789ee03af4cc342586af897b56780207bcff695152a2bf3e4422f90d";
 
@@ -585,20 +588,20 @@ app.get("/sendAirdrop", async (req, res) => {
     // var contractAddress = "0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1";
 
     // walter token that I deployed myself
-    var contractAddress = "0x26db60aab218e651e812cb36fb67f604015aa53b";
+    var contractAddress = '0x26db60aab218e651e812cb36fb67f604015aa53b';
 
     var contractAbiFragment = [
       {
-        name: "transfer",
-        type: "function",
+        name: 'transfer',
+        type: 'function',
         inputs: [
           {
-            name: "_to",
-            type: "address",
+            name: '_to',
+            type: 'address',
           },
           {
-            type: "uint256",
-            name: "_tokens",
+            type: 'uint256',
+            name: '_tokens',
           },
         ],
         constant: false,
@@ -641,19 +644,19 @@ app.listen(port, () => {
  *    '200':
  *     description: Successfully retrieved address
  */
-app.post("/permission-request", async (req, res) => {
+app.post('/permission-request', async (req, res) => {
   if (!req.body.transaction || !req.body.network || !req.body.mnemonic) {
-    return res.status(400).send("Invalid parameters");
+    return res.status(400).send('Invalid parameters');
   }
   let url, networkId;
   const network = req.body.network;
   const mnemonic = req.body.mnemonic;
-  if (network == "etheruem") (url = "https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK"), (networkId = 1);
-  else if (network == "polygon") (url = "https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm"), (networkId = 137);
-  else if (network == "mumbai") return res.send("Swapping is not supported on testnets, please use polygon, etheruem or binance");
-  else if (network == "binance")
-    (url = "https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/"), (networkId = 56);
-  else return res.send("Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance");
+  if (network == 'etheruem') (url = 'https://eth-mainnet.g.alchemy.com/v2/BP8Dcnr48bv53KlJHCu7nvI3lPkqAUfK'), (networkId = 1);
+  else if (network == 'polygon') (url = 'https://polygon-mainnet.g.alchemy.com/v2/GcrjPFNV5bUAOW3kfPKUVfjtQ_IEzdxm'), (networkId = 137);
+  else if (network == 'mumbai') return res.send('Swapping is not supported on testnets, please use polygon, etheruem or binance');
+  else if (network == 'binance')
+    (url = 'https://black-silent-flower.bsc.discover.quiknode.pro/04d34bf1d786c2f9008b084285d59bccb42b5e76/'), (networkId = 56);
+  else return res.send('Invalid network. Please make sure your network value is one of the following: etheruem, polygon, mumbai, binance');
   let mnemonicWallet = ethers.Wallet.fromMnemonic(mnemonic);
   // console.log(mnemonicWallet.address);
   const PRIVATE_KEY = mnemonicWallet.privateKey;
@@ -669,10 +672,52 @@ app.post("/permission-request", async (req, res) => {
   transaction.gas = gasLimit;
   transaction.from = walletAddress;
 
-  console.log("permission transaction: ", transaction);
+  console.log('permission transaction: ', transaction);
   let tx = await web3.eth.sendTransaction(transaction);
   if (tx.status) {
-    console.log("Permission Granted! :)");
+    console.log('Permission Granted! :)');
     return res.send({ transaction: tx });
   }
+});
+/**
+ * @swagger
+ * /user:
+ *  post:
+ *   description: gets user object
+ *   parameters:
+ *   - name: username
+ *     description: username of the user to be checked
+ *     example: {"username" : "sam"}
+ *     in: body
+ *     required: true
+ *   responses:
+ *    '200':
+ *     description: Successfully retrieved address
+ */
+app.post('/user', async (req, res) => {
+  const username = req.body.username;
+  // console.log(username);
+  const connectDb = async () => {
+    try {
+      const client = new Client({
+        user: process.env.PGUSER,
+        host: process.env.PGHOST,
+        database: process.env.PGDATABASE,
+        password: process.env.PGPASSWORD,
+        port: process.env.PGPORT,
+      });
+
+      await client.connect();
+      let query = `SELECT * FROM "user" u where twitter_username = '${username}'`;
+      // console.log('query : ', query);
+      let userObject = await client.query(query);
+      // console.log("here's the result.. ", res.rows);
+      res.status(200).send(userObject.rows[0]);
+      await client.end();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  connectDb();
 });
